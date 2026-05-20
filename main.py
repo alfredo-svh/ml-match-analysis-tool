@@ -1,3 +1,4 @@
+import json
 import sys
 
 import numpy as np
@@ -5,7 +6,6 @@ import numpy as np
 from annotation import FootballVideoProcessor
 from ball_to_player_assignment import BallToPlayerAssigner
 from club_assignment import ClubAssigner, Club
-from config import club1_name, club1_player_color, club1_gk_color, club2_name, club2_player_color, club2_gk_color
 from tracking import ObjectTracker, KeypointsTracker
 from utils import process_video
 
@@ -22,24 +22,39 @@ SAVE_TRACKS_DIR = 'output_videos'
 DRAW_FRAME_NUM = True
 
 
-def main():
+def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+
+def main() -> None:
     """
     Main function to demonstrate how to use the football analysis project.
     This script will walk you through loading models, assigning clubs, tracking objects and players, and processing the video.
     """
 
-    if len(sys.argv) != 2:
-        print("Usage: python main.py <video_source>")
+    if len(sys.argv) != 4:
+        print("Usage: python main.py <video_source> <team1_info> <team2_info>")
+        print("video_source: Path to the video file.")
+        print("team1_info: Path to the JSON file containing team1 information (name[str], player_color[str], gk_color[str]).")
+        print("team2_info: Path to the JSON file containing team2 information (name[str], player_color[str], gk_color[str]).")
         sys.exit(1)
-
-    print("Team information will be based on config.py. Make sure the file was updated based on the input video.")
-    input("Press Enter to continue, or Ctrl+C to exit...")
-
+    
     video_source = sys.argv[1]
-    run_processing(video_source)
+    team1 = json.loads(sys.argv[2])
+    team2 = json.loads(sys.argv[3])
 
-def run_processing(video_source, club1_name=club1_name, club1_player_color=club1_player_color, club1_gk_color=club1_gk_color, 
-                   club2_name=club2_name, club2_player_color=club2_player_color, club2_gk_color=club2_gk_color):
+    team1['player_color'] = hex_to_rgb(team1['player_color'])
+    team1['gk_color'] = hex_to_rgb(team1['gk_color'])
+
+    team2['player_color'] = hex_to_rgb(team2['player_color'])
+    team2['gk_color'] = hex_to_rgb(team2['gk_color'])
+
+    run_processing(video_source, team1['name'], team1['player_color'], team1['gk_color'], team2['name'], team2['player_color'], team2['gk_color'])
+
+def run_processing(
+        video_source: str, club1_name: str, club1_player_color: tuple[int, int, int], club1_gk_color: tuple[int, int, int],
+        club2_name: str, club2_player_color: tuple[int, int, int], club2_gk_color: tuple[int, int, int]
+    ) -> None:
     
     video_file_name = video_source.split('/')[-1].split('.')[0]
     output_video = f'output_videos/{video_file_name}_annotated.mp4'

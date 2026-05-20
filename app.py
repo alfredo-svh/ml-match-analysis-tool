@@ -3,11 +3,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from tkinter.colorchooser import askcolor
 
-from main import run_processing
-
-def hex_to_rgb(hex_color):
-    hex_color = hex_color.lstrip('#')
-    return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+from main import hex_to_rgb, run_processing
 
 
 class MatchAnalysisApp:
